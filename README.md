@@ -46,13 +46,15 @@ library(tidyverse)
 library(readxl)
 ```
 
-The first thing we do is load the whole title list as a variable called 'working_list', specifying the sheet of the excel file we'd like to use. 
+The first thing to do is download a copy of the British and Irish Newspapers title list available [here](https://doi.org/10.23636/1136). This uses the version in the .zip file which contains a .csv and readme - the column names in the excel sheet are slightly different.
+
+load the whole title list as a variable called 'working_list', specifying the sheet of the excel file we'd like to use. 
 
 
 ```R
-working_list <- read_excel(
-  "UK_Ireland_Newspapers_Title_Level_List.xlsx", 
-                           sheet = "Title-level list")
+working_list <- read_csv(
+BritishAndIrishNewspapersTitleList_20191118.csv, 
+local = locale(encoding = "latin1"))
 ```
 
 Glimpse() allows us to take a look at all the fields:
@@ -94,8 +96,8 @@ Let's just look at the nineteenth century - we'll use the filter() function from
 
 ```R
 working_list %>% 
-  filter(Last.date.held>1799) %>%
-  filter(First.date.held<1900) %>% 
+  filter(last_date_held>1799) %>%
+  filter(first_date_held<1900) %>% 
 head(2)
 ```
 
@@ -120,11 +122,11 @@ Then we pass this through the function ggplot(), followed by something called a 
 # First a line charting the number of new titles per year in the 19th century:
 
 working_list %>% 
-  filter(Last.date.held>1799) %>%
-  filter(First.date.held<1900) %>% 
-  group_by(First.date.held) %>% 
+  filter(last_date_held>1799) %>%
+  filter(first_date_held<1900) %>% 
+  group_by(first_date_held) %>% 
   tally() %>%
-  ggplot() + geom_line(aes(x = First.date.held, y = n ))
+  ggplot() + geom_line(aes(x = first_date_held, y = n ))
 ```
 
 
@@ -138,8 +140,8 @@ Next we can do a bar chart of titles, for each country in the dataset.
 
 ```R
 working_list %>% 
-  group_by(Country.of.publication) %>% 
-  tally() %>% ggplot() + geom_bar(aes(x = Country.of.publication, y = n), stat = 'identity')
+  group_by(country_of_publication) %>% 
+  tally() %>% ggplot() + geom_bar(aes(x = country_of_publication, y = n), stat = 'identity')
 ```
 
 
@@ -151,14 +153,14 @@ There are lots of places mentioned just a handful of times - this is primarily a
 
 ```R
 working_list %>% 
-  filter(Country.of.publication %in% c('Ireland', 
+  filter(country_of_publication %in% c('Ireland', 
                                        'Northern Ireland', 
                                        'England', 
                                        'Wales', 
                                        'Scotland')) %>%
-  group_by(Country.of.publication) %>% 
+  group_by(country_of_publication) %>% 
   tally() %>% ggplot() + 
-geom_bar(aes(x = Country.of.publication, y = n), stat = 'identity')
+geom_bar(aes(x = country_of_publication, y = n), stat = 'identity')
 ```
 
 
@@ -172,16 +174,16 @@ We can count by county. This time we add back in the filter for first and last d
 
 ```R
 working_list %>% 
-  filter(Country.of.publication %in% c('Ireland', 
+  filter(country_of_publication %in% c('Ireland', 
                                        'Northern Ireland', 
                                        'England', 
                                        'Wales', 
                                        'Scotland')) %>%
-  filter(Last.date.held>1799) %>%
-  filter(First.date.held<1900) %>% 
-  group_by(General.area.of.coverage) %>% 
+  filter(last_date_held>1799) %>%
+  filter(first_date_held<1900) %>% 
+  group_by(general_area_of_coverage) %>% 
   tally() %>% ggplot() + 
-geom_bar(aes(x = General.area.of.coverage, y = n), stat = 'identity')
+geom_bar(aes(x = general_area_of_coverage, y = n), stat = 'identity')
 ```
 
 
@@ -195,16 +197,16 @@ That's not very readable. Let's make a few adjustments.
 # reorder by number of titles using reorder()
 
 working_list %>% 
-  filter(Country.of.publication %in% c('Ireland', 
+  filter(country_of_publication %in% c('Ireland', 
                                        'Northern Ireland', 
                                        'England', 
                                        'Wales', 
                                        'Scotland')) %>%
-  filter(Last.date.held>1799) %>%
-  filter(First.date.held<1900) %>% 
-  group_by(General.area.of.coverage) %>% 
+  filter(last_date_held>1799) %>%
+  filter(first_date_held<1900) %>% 
+  group_by(general_area_of_coverage) %>% 
   tally() %>% ggplot() + 
-geom_bar(aes(x = reorder(General.area.of.coverage,n), y = n), stat = 'identity')
+geom_bar(aes(x = reorder(general_area_of_coverage,n), y = n), stat = 'identity')
 ```
 
 
@@ -216,16 +218,16 @@ geom_bar(aes(x = reorder(General.area.of.coverage,n), y = n), stat = 'identity')
 # Make it vertical with coord_flip():
 
 working_list %>% 
-  filter(Country.of.publication %in% c('Ireland', 
+  filter(country_of_publication %in% c('Ireland', 
                                        'Northern Ireland', 
                                        'England', 
                                        'Wales', 
                                        'Scotland')) %>%
-  filter(Last.date.held>1799) %>%
-  filter(First.date.held<1900) %>% 
-  group_by(General.area.of.coverage) %>% 
+  filter(lat_date_held>1799) %>%
+  filter(first_date_held<1900) %>% 
+  group_by(general_area_of_coverage) %>% 
   tally() %>% ggplot() + 
-geom_bar(aes(x = reorder(General.area.of.coverage,n), y = n), stat = 'identity') + coord_flip()
+geom_bar(aes(x = reorder(general_area_of_coverage,n), y = n), stat = 'identity') + coord_flip()
 ```
 
 
@@ -237,17 +239,17 @@ geom_bar(aes(x = reorder(General.area.of.coverage,n), y = n), stat = 'identity')
 # Remove NA values:
 
 working_list %>% 
-  filter(!is.na(General.area.of.coverage)) %>%
-  filter(Country.of.publication %in% c('Ireland', 
+  filter(!is.na(general_area_of_coverage)) %>%
+  filter(country_of_publication %in% c('Ireland', 
                                        'Northern Ireland', 
                                        'England', 
                                        'Wales', 
                                        'Scotland')) %>%
-  filter(Last.date.held>1799) %>%
-  filter(First.date.held<1900) %>% 
-  group_by(General.area.of.coverage) %>% 
+  filter(last_date_held>1799) %>%
+  filter(first_date_held<1900) %>% 
+  group_by(general_area_of_coverage) %>% 
   tally() %>% ggplot() + 
-geom_bar(aes(x = reorder(General.area.of.coverage,n), y = n), stat = 'identity') + coord_flip()
+geom_bar(aes(x = reorder(general_area_of_coverage,n), y = n), stat = 'identity') + coord_flip()
 ```
 
 
@@ -259,19 +261,19 @@ geom_bar(aes(x = reorder(General.area.of.coverage,n), y = n), stat = 'identity')
 # Get the top 10:
 
 working_list %>% 
-  filter(!is.na(General.area.of.coverage)) %>%
-  filter(Country.of.publication %in% c('Ireland', 
+  filter(!is.na(general_area_of_coverage)) %>%
+  filter(country_of_publication %in% c('Ireland', 
                                        'Northern Ireland', 
                                        'England', 
                                        'Wales', 
                                        'Scotland')) %>%
-  filter(Last.date.held>1799) %>%
-  filter(First.date.held<1900) %>% 
-  group_by(General.area.of.coverage) %>% 
+  filter(last_date_held>1799) %>%
+  filterfirst_date_held<1900) %>% 
+  group_by(general_area_of_coverage) %>% 
   tally() %>%
   top_n(10) %>%
 ggplot() + 
-geom_bar(aes(x = reorder(General.area.of.coverage,n), y = n), stat = 'identity') + coord_flip()
+geom_bar(aes(x = reorder(general_area_of_coverage,n), y = n), stat = 'identity') + coord_flip()
 ```
 
     Selecting by n
@@ -320,21 +322,21 @@ mycolors
 # Plot this, also adding some transparency and changing the theme slightly, and give it a title and a few other tweaks
 
 working_list %>% 
-  filter(!is.na(General.area.of.coverage)) %>%
-  filter(Country.of.publication %in% c('Ireland', 
+  filter(!is.na(general_area_of_coverage)) %>%
+  filter(country_of_publication %in% c('Ireland', 
                                        'Northern Ireland', 
                                        'England', 
                                        'Wales', 
                                        'Scotland')) %>%
-  filter(Last.date.held>1799) %>%
-  filter(First.date.held<1900) %>% 
-  group_by(General.area.of.coverage) %>% 
+  filter(last_date_held>1799) %>%
+  filter(first_date_held<1900) %>% 
+  group_by(general_area_of_coverage) %>% 
   tally() %>%
   top_n(10) %>%
 ggplot() + 
-geom_bar(aes(x = reorder(General.area.of.coverage,n),
+geom_bar(aes(x = reorder(general_area_of_coverage,n),
              y = n, 
-             fill = General.area.of.coverage), 
+             fill = general_area_of_coverage), 
          stat = 'identity',
         color = 'black',
         alpha = .7) + coord_flip() + 
@@ -361,8 +363,8 @@ Let's just get the total titles starting before 1800, and compare that to the to
 
 ```R
 working_list %>% 
-filter(First.date.held < '1800') %>% 
-group_by(Coverage..City) %>% 
+filter(first_date_held < '1800') %>% 
+group_by(coverage_city) %>% 
 tally() %>%
 arrange(desc(n))
 ```
@@ -440,8 +442,8 @@ arrange(desc(n))
 
 ```R
 working_list %>% 
-filter(First.date.held < '1900') %>% 
-group_by(Coverage..City) %>% 
+filter(first_date_held < '1900') %>% 
+group_by(coverage_city) %>% 
 tally() %>%
 arrange(desc(n))
 ```
@@ -519,16 +521,16 @@ arrange(desc(n))
 
 ```R
 working_list %>% 
-filter(First.date.held < '1800') %>% 
-group_by(Coverage..City) %>% 
+filter(first_date_held < '1800') %>% 
+group_by(coverage_city) %>% 
 tally() %>% 
 left_join(working_list %>% 
-          filter(First.date.held < '1900'& First.date.held >'1800') %>% 
-          group_by(Coverage..City) %>% 
-          tally(), by = 'Coverage..City') %>%
+          filter(first_date_held < '1900'& first_date_held >'1800') %>% 
+          group_by(coverage_city) %>% 
+          tally(), by = 'coverage_city') %>%
 mutate(percent = n.y/n.x*100) %>% 
 arrange(desc(percent)) %>% top_n(20,wt = percent) %>% ggplot() + 
-geom_bar(aes(x = reorder(Coverage..City, desc(percent)),
+geom_bar(aes(x = reorder(coverage_city, desc(percent)),
              y = percent,
             fill = percent), 
          stat = 'identity',
